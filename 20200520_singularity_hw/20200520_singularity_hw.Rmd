@@ -1,0 +1,151 @@
+---
+title: "Hello World Example For Singularity Container"
+author: "Peter von Rohr"
+date: "5/20/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Requirements
+## Singularity-Container
+The first step is to install the singularity-container system on a linux machine. Installations on macosx and windows are possible, but they require more preparation. The installation can be run using the commands shown below. In the first step a different repository is specified, because the singularity-container version in the default repository is outdated.
+
+```
+# getting the repository from neuro.debian and adding the keyserver
+wget -O- http://neuro.debian.net/lists/bionic.de-md.full | \
+  sudo tee /etc/apt/sources.list.d/neurodebian.sources.list
+sudo apt-key adv --recv-keys --keyserver hkp://pool.sks-keyservers.net:80 0xA5D32F012649A5A9
+# updating and installing the 
+sudo apt-get update
+sudo apt-get install singularity-container
+```
+
+The installation can be checked using the following command.
+
+```
+$ singularity --version
+2.6.1-dist
+```
+
+## Package debootstrap
+In case the package `debootstrap` is not installed on the host-machine, this must be installed also.
+
+
+# Building A Singularity Container 
+The following options are available for building a singularity container. 
+
+1. Singularity Recipe File
+2. From Singularity Hub
+3. Dockerfile
+4. From Docker Hub
+
+
+## Singularity Recipe File
+Recipe files are simple text files which specifies the content of a container image. By convention these recipe files are called `Singularity`. An example of such a file is shown below.
+
+```
+$ cat Singularity 
+BootStrap: debootstrap
+OSVersion: bionic
+MirrorURL: http://archive.ubuntu.com/ubuntu/
+
+%post
+  apt -y update
+  apt-get install -y gfortran
+
+```
+
+The above shown recipe file indicates to base the singularity container on ubuntu 18.04 (bionic). After the first three lines that define the basic operating system components, the keyword `%post` indicates the start of the post-installation section. In this post-section additional software packages can be added to the container. In the above shown example, `gfortran` is installed. 
+
+The container is built using the following command
+
+```
+sudo singularity build ubuntu_hw.img Singularity
+```
+
+The above command uses the recipe file (Singularity) as input and builds the container into the image file `ubuntu_hw.img`. 
+
+## Singularity Hub
+Singularity hub (https://singularity-hub.org/) is a public container registry. This registry stores information about pre-built container images which can be used. These images can be built using 
+
+```
+singularity pull --name vsoch.img shub://vsoch/hello-world
+```
+
+## Dockerfile
+In case, we have a dockerfile (recipe for a docker container), this can also be used to build a singularity container.
+
+## Docker Hub
+Docker hub is the public registry of docker images. Pre-build images can be obtained from the docker hub. 
+
+```
+singularity pull --name ubuntu.img docker://ubuntu
+```
+
+
+# Using Container
+## Micro-Service Usage
+Containers can be used in very different ways. The most prominent use is in the context of micro-services. This means that every application is included into a separate container and these containers are run whenever the service is required. Translated to our hello-world container above, we have installed a Fortran compiler and this compiler inside of the container can be used as shown below.
+
+```
+singularity exec ubuntu_hw.img gfortran -o hello hello.f90
+```
+
+The above command compiles the f90-program in `hello.f90` producing the executable called `hello`. This can be executed with 
+
+```
+$ singularity exec ubuntu_hw.img ./hello
+ Hello World!
+```
+
+
+## Container Instance
+A less frequent use-case is to install different types of applications into the same container and run the different programs from a running instance of the container. An instance of the container can be started with 
+
+```
+singularity instance start ubuntu_hw.img siuhw
+```
+
+The list of running instances is obtained via
+
+```
+$ singularity instance list
+DAEMON NAME      PID      CONTAINER IMAGE
+siuhw            31406    /home/quagadmin/simg/img/hello-world/ubuntu_hw.img
+```
+
+Once an instance is started, the shorter `DAEMON NAME` can be used to run programs of the container. Hence the equivalent to the above compilation and execution can be done as
+
+```
+$ singularity exec instance://siuhw gfortran -o hello hello.f90
+$ singularity exec instance://siuhw ./hello
+ Hello World!
+```
+
+A third possibility is to first start a shell from the running container instance and then run all the commands from within that shell.
+
+```
+$ singularity shell instance://siuhw
+Singularity: Invoking an interactive shell within container...
+Singularity ubuntu_hw.img:~/simg/img/hello-world> gfortran -o hello hello.f90 
+Singularity ubuntu_hw.img:~/simg/img/hello-world> ./hello 
+ Hello World!
+
+```
+
+Any running instance of a container can be stopped with the following command.
+
+```
+$ singularity instance stop siuhw
+Stopping siuhw instance of /home/quagadmin/simg/img/hello-world/ubuntu_hw.img (PID=31406)
+```
+
+
+
+
+
+
+
