@@ -2,7 +2,9 @@
 title: "Hello World Example For Singularity Container"
 author: "Peter von Rohr"
 date: "5/20/2020"
-output: pdf_document
+output:
+  html_document:
+    df_print: paged
 ---
 
 ```{r setup, include=FALSE}
@@ -143,6 +145,12 @@ $ singularity instance stop siuhw
 Stopping siuhw instance of /home/quagadmin/simg/img/hello-world/ubuntu_hw.img (PID=31406)
 ```
 
+
+# Resources
+The above material is based on 
+
+* https://www.youtube.com/watch?v=m8llDjFuXlc and 
+* https://www.youtube.com/watch?v=SJHizTjwyFk.
 
 
 
