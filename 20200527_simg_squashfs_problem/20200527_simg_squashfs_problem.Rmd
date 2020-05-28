@@ -1,0 +1,42 @@
+---
+title: "Singularity squashfs Problem"
+output: html_notebook
+---
+
+# Disclaimer
+Documentation and trials of reproduction of the problem on squashfs in singularity reported by Eildert.
+
+
+# Setup
+Use ubuntu 18.04 and 20.04 to check potential differences in the behavior. Each of the two systems are created in docker with different docker files.
+
+
+# Experiments
+## Neuro-Debian Package repository
+Using `Dockerfile_ubuntu_18.04` with ubuntu bionic, the package `singularity-container` can be installed using the repository under http://neuro.debian.net/. This results in an installed version of '2.6.1-dist' of singularity. 
+
+Unfortunately, the corresponding `singularity-container` is not available for ubuntu 20.04 (focal). The installation stops with the error
+
+```
+E: Package 'singularity-container' has no installation candidate
+```
+
+Using the 19.04 (disco) settings of neuro-debian leads to an installation of singularity version '2.6.1-dist'.
+
+Hence this approach works, but the installed version of singularity is old.
+
+
+## Sylab Installation 
+
+# Command Cheat-Sheet
+## Building docker image from Dockerfile
+
+```
+docker build -t ubuntu_20.04 -f ./Dockerfile_ubuntu_20.04 .
+```
+
+## Runing docker image
+
+```
+docker run -it --rm ubuntu_20.04 /bin/bash
+```
