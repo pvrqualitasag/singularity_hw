@@ -7,6 +7,28 @@ output: html_notebook
 Documentation and trials of reproduction of the problem on squashfs in singularity reported by Eildert.
 
 
+# Problem
+The problem reported by Eildert or a variant of that problem could be reproduced on versions '2.4.2-dist' and '2.6.1-dist'. What does not seam to be possible is the start a writable shell from an image, as shown below
+
+```
+sudo singularity shell --writable ubuntu_hw.img 
+ERROR  : Unable to open squashfs image in read-write mode: Read-only file system
+ABORT  : Retval = 255
+```
+
+It does work with a sandbox directory.
+
+```
+sudo singularity shell --writable ubuntu_hw
+WARNING: Non existent bind point (file) in container: '/etc/localtime'
+Singularity: Invoking an interactive shell within container...
+```
+
+
+
+
+
+
 # Setup
 Use ubuntu 18.04 and 20.04 to check potential differences in the behavior. Each of the two systems are created in docker with different docker files.
 
