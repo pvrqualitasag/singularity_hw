@@ -1,0 +1,220 @@
+---
+title: "Building Singularity Container For GENMON"
+author: "Peter von Rohr"
+date: "5/27/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Disclaimer
+This document is used to show some options for building singularity containers. Part of the material below was done in the GENMON project.
+
+
+# Prerequisites
+All material is inclosed in the github repository `genmon-sidef`. A shell script is provided to clone and to update the content of the github repository.
+
+
+# Plan
+Start with a singularity sandbox container built according to the description given in 
+
+* https://www.youtube.com/watch?v=m8llDjFuXlc and 
+* https://www.youtube.com/watch?v=SJHizTjwyFk.
+
+
+# Protocol
+## Building the container
+
+```
+sudo singularity build --sandbox ubuntu_sand docker://ubuntu:18.04
+```
+
+
+## Start shell in Sandbox Container
+
+```
+sudo singularity shell --writable ubuntu_sand/
+```
+
+
+## Building Container from Recipe
+
+```
+sudo singularity build si-genmon.simg /home/quagadmin/simg/genmon-sidef/Singularity-genmon.recipe
+```
+
+
+## Starting an Instance of the container
+
+```
+singularity instance start si-genmon.simg sigm
+```
+
+
+## Want to Change Image
+
+* Hence I start a shell in the `--writable` mode from an image-file and not from a sandbox directory.
+
+```
+sudo singularity shell --writable si-genmon.simg 
+ERROR  : Unable to open squashfs image in read-write mode: Read-only file system
+ABORT  : Retval = 255
+```
+
+* This gives me the same problem as reported by Eildert. Let us look at the version. 
+
+```
+singularity --version
+2.4.2-dist
+```
+
+* Try the same on '2.6.1-dist'
+
+The same problem is also on '2.6.1-dist'
+
+```
+singularity --version
+2.6.1-dist
+```
+
+Starting a writable shell from an image file does not work.
+
+```
+sudo singularity shell --writable ubuntu_hw.img 
+ERROR  : Unable to open squashfs image in read-write mode: Read-only file system
+ABORT  : Retval = 255
+```
+
+A normal shell can be started. 
+
+```
+$ singularity shell si-genmon.simg
+Singularity: Invoking an interactive shell within container...
+```
+
+
+## Writable Image Build
+
+
+
+## Update to Neurodebian Version
+
+```
+wget -O- http://neuro.debian.net/lists/bionic.de-m.full | sudo tee /etc/apt/sources.list.d/neurodebian.sources.list
+sudo apt-key adv --recv-keys --keyserver hkp://pool.sks-keyservers.net:80 0xA5D32F012649A5A9
+sudo apt-get update -y
+sudo apt-get install -y singularity-container
+```
+
+This does not work anymore. For some reason singularity is no longer on neurodebian
+
+
+## Update to 2.6.1 using ubuntuupdates
+
+```
+  mkdir -p source/singularity
+  cd source/singularity/
+  wget http://security.ubuntu.com/ubuntu/pool/universe/s/singularity-container/singularity-container_2.6.1-2_amd64.deb
+  sudo apt-get update
+  sudo apt-get install -y gdebi-core
+  sudo gdebi --n singularity-container_2.6.1-2_amd64.deb 
+```
+
+
+## Install Singularity Version > 3.0
+
+
+* Postponed to later ...
+* Following instructions given on https://sylabs.io/guides/3.0/user-guide/installation.html
+* Removing old version ==> not needed for apt-based installations
+
+```
+sudo ls -la \
+    /usr/local/libexec/singularity \
+    /usr/local/var/singularity \
+    /usr/local/etc/singularity \
+    /usr/local/bin/singularity \
+    /usr/local/bin/run-singularity \
+    /usr/local/etc/bash_completion.d/singularity
+ls: cannot access '/usr/local/libexec/singularity': No such file or directory
+ls: cannot access '/usr/local/var/singularity': No such file or directory
+ls: cannot access '/usr/local/etc/singularity': No such file or directory
+ls: cannot access '/usr/local/bin/singularity': No such file or directory
+ls: cannot access '/usr/local/bin/run-singularity': No such file or directory
+ls: cannot access '/usr/local/etc/bash_completion.d/singularity': No such file or directory    
+```
+
+* Install go
+
+```
+  cd;cd source/;mkdir go;cd go/
+  wget https://dl.google.com/go/go1.14.4.linux-amd64.tar.gz
+  sudo tar -C /usr/local -xzf go1.14.4.linux-amd64.tar.gz 
+  # add go_path
+  sudo vi /etc/profile.d/apps-bin-path.sh 
+  # change path for just for current session
+  export PATH=${PATH}:/usr/local/go/bin
+```
+
+* Test go
+
+```
+echo 'package main
+
+import "fmt"
+
+func main() {
+	fmt.Printf("hello, world\n")
+}' > hello.go
+
+go build hello.go
+./hello
+```
+
+* Pre-requisites ==> were not needed for compiling 3.5.3
+
+```
+sudo su - -c 'echo "deb http://de.archive.ubuntu.com/ubuntu bionic main" >> /etc/apt/sources.list'
+sudo apt-get update
+
+sudo apt-get update && sudo apt-get install -y \
+    build-essential \
+    uuid-dev \
+    libgpgme-dev \
+    squashfs-tools \
+    libseccomp-dev \
+    wget \
+    pkg-config \
+    git \
+    cryptsetup-bin
+```
+
+```
+sudo apt-get install -f libseccomp-dev uuid-dev
+
+```
+
+
+* Download Singularity from Release 3.5.3
+
+```
+  mkdir -p source/singularity
+  cd source/singularity/
+  export VERSION=3.5.3
+  mkdir ${VERSION}
+  cd ${VERSION}
+  wget https://github.com/sylabs/singularity/releases/download/v${VERSION}/singularity-${VERSION}.tar.gz && tar -xzf singularity-${VERSION}.tar.gz && cd ./singularity && ./mconfig
+  cd builddir/
+  make
+  sudo make install
+```
+
+
+
+
+
+
+
+
